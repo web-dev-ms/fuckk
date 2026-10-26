@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMASH GYM | عجلة الحظ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#D4AF37; --gold-light:#F7DE82; --gold-dark:#9C7A1A;
+    --bg:#0a0a0a; --card:#141414; --line:rgba(212,175,55,.35); --text:#f3e9c6; --muted:#b9ab7a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100%}
+  body{
+    font-family:'Cairo',system-ui,sans-serif; color:var(--text); background:var(--bg);
+    background-image:
+      radial-gradient(900px 500px at 50% -10%, rgba(212,175,55,.18), transparent 60%),
+      radial-gradient(700px 500px at 100% 110%, rgba(212,175,55,.10), transparent 60%);
+    background-attachment:fixed;
+    display:flex; justify-content:center; padding:24px 16px 40px;
+  }
+  .wrap{width:100%; max-width:460px}
+  .page{display:none; animation:fade .5s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  .logo{width:210px;height:210px;margin:6px auto 4px;display:block;filter:drop-shadow(0 0 22px rgba(212,175,55,.35))}
+  .logo img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+  .logo svg{width:100%;height:100%}
+  .logo.small{width:110px;height:110px;margin-bottom:0}
+
+  h1{font-size:28px;font-weight:900;text-align:center;margin:8px 0 6px;
+     background:linear-gradient(180deg,var(--gold-light),var(--gold) 55%,var(--gold-dark));
+     -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{text-align:center;color:var(--muted);font-size:15px;line-height:1.8;margin-bottom:18px}
+
+  .warn{display:flex;gap:10px;align-items:center;background:rgba(212,175,55,.08);
+        border:1px dashed var(--gold);border-radius:14px;padding:12px 14px;margin-bottom:18px;
+        font-size:14px;line-height:1.7;color:var(--gold-light)}
+  .warn b{color:#fff}
+
+  .card{background:linear-gradient(180deg,#171717,#101010);border:1px solid var(--line);
+        border-radius:20px;padding:22px 18px;box-shadow:0 10px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04)}
+  label{display:block;font-size:14px;font-weight:700;color:var(--gold-light);margin:0 2px 7px}
+  .field{margin-bottom:16px}
+  input,select{
+    width:100%;font-family:inherit;font-size:16px;color:var(--text);
+    background:#0c0c0c;border:1.5px solid rgba(212,175,55,.3);border-radius:12px;padding:13px 14px;outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input::placeholder{color:#6f6647}
+  input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.18)}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);
+         background-position:calc(0% + 20px) 55%, calc(0% + 14px) 55%;background-size:6px 6px;background-repeat:no-repeat;padding-left:38px}
+  select option{background:#111;color:var(--text)}
+
+  .btn{width:100%;font-family:inherit;font-size:18px;font-weight:900;cursor:pointer;border:0;border-radius:14px;
+       padding:14px;color:#1a1300;background:linear-gradient(180deg,var(--gold-light),var(--gold) 60%,var(--gold-dark));
+       box-shadow:0 6px 20px rgba(212,175,55,.3);transition:transform .15s, box-shadow .15s, opacity .2s}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--gold-light);border:1.5px solid var(--gold);box-shadow:none;margin-top:12px}
+  .err{display:none;background:rgba(190,40,40,.15);border:1px solid rgba(220,70,70,.6);color:#ffb4b4;
+       border-radius:12px;padding:11px 13px;font-size:14px;line-height:1.7;margin-bottom:14px}
+  .err.show{display:block}
+
+  /* wheel */
+  .who{text-align:center;margin:2px 0 14px}
+  .who .hi{color:var(--muted);font-size:14px}
+  .who .nm{font-size:22px;font-weight:900;color:var(--gold-light)}
+  .wheel-box{position:relative;width:min(100%,380px);aspect-ratio:1;margin:0 auto 18px}
+  .wheel-box canvas{width:100%;height:100%;display:block;border-radius:50%;
+                    transition:transform 5.5s cubic-bezier(.12,.72,.1,1);
+                    filter:drop-shadow(0 8px 28px rgba(212,175,55,.35))}
+  .pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);z-index:3;width:0;height:0;
+           border-left:15px solid transparent;border-right:15px solid transparent;border-top:32px solid #fff;
+           filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+  .pointer::after{content:"";position:absolute;left:-8px;top:-30px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:18px solid var(--gold)}
+  .hub{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:19%;aspect-ratio:1;border-radius:50%;z-index:2;
+       background:radial-gradient(circle at 35% 30%,#222,#000);border:4px solid var(--gold);
+       display:flex;align-items:center;justify-content:center;font-family:'Alfa Slab One',serif;color:var(--gold-light);font-size:clamp(10px,3vw,15px);
+       box-shadow:0 0 18px rgba(212,175,55,.5)}
+
+  .result{display:none;margin-top:20px;text-align:center;border-radius:20px;padding:22px 16px;
+          background:linear-gradient(180deg,#1b1606,#0f0c03);border:2px solid var(--gold);
+          box-shadow:0 0 36px rgba(212,175,55,.3);animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+  .result.show{display:block}
+  @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+  .result .trophy{font-size:44px;line-height:1}
+  .result h2{font-size:22px;font-weight:900;color:var(--gold-light);margin:6px 0}
+  .result .prize{font-size:24px;font-weight:900;color:#fff;background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.08));
+                 border:1px solid var(--gold);border-radius:14px;padding:12px;margin:10px 0}
+  .result .meta{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px}
+  .shot{background:rgba(212,175,55,.1);border:1px dashed var(--gold);border-radius:14px;padding:13px;font-size:15px;line-height:1.9;color:var(--text)}
+  .shot b{color:var(--gold-light)}
+  .wa{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;text-decoration:none;
+      font-weight:900;font-size:16px;color:#fff;background:#1fa855;border-radius:14px;padding:13px}
+  .foot{text-align:center;color:#6f6647;font-size:12px;margin-top:22px}
+
+  /* master dashboard */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 16px}
+  .stat{background:linear-gradient(180deg,#171717,#101010);border:1px solid var(--line);border-radius:18px;padding:18px 10px;text-align:center}
+  .stat.big{grid-column:1 / -1;border:2px solid var(--gold);box-shadow:0 0 30px rgba(212,175,55,.25)}
+  .stat .n{font-size:46px;font-weight:900;line-height:1.1;
+           background:linear-gradient(180deg,var(--gold-light),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .l{font-size:14px;color:var(--muted);margin-top:4px}
+  .pending{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px}
+  .sheet{width:100%;border-collapse:collapse;margin:0 0 16px;font-size:13px;background:#101010;border:1px solid var(--line)}
+  .sheet th{background:rgba(212,175,55,.15);color:var(--gold-light);padding:9px 6px;font-weight:700}
+  .sheet td{padding:9px 6px;border-top:1px solid rgba(212,175,55,.15);text-align:center}
+  .sheet td.nm{text-align:right}
+  .sheet .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700}
+  .sheet .tag.m{background:rgba(31,168,85,.2);color:#6fe3a0}
+  .sheet .tag.n{background:rgba(212,175,55,.18);color:var(--gold-light)}
+
+  .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:50;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="goldG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7DE82"/><stop offset=".5" stop-color="#D4AF37"/><stop offset="1" stop-color="#9C7A1A"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<template id="logoTpl">
+  <div class="logo">
+    <!-- لو حطيت صورة اللوجو بجانب الملف باسم logo.png هتظهر هي بدل الرسمة -->
+    <img src="logo.png" alt="SMASH GYM" onload="this.nextElementSibling.style.display='none'" onerror="this.remove()">
+    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="205" r="150" fill="none" stroke="url(#goldG)" stroke-width="34"/>
+      <path d="M152 118 V72 Q152 44 180 44 H220 Q248 44 248 72 V118" fill="none" stroke="url(#goldG)" stroke-width="14" stroke-linejoin="round"/>
+      <circle cx="200" cy="150" r="54" fill="#0a0a0a" stroke="url(#goldG)" stroke-width="12"/>
+      <text x="200" y="164" text-anchor="middle" font-family="Alfa Slab One,serif" font-size="38" fill="url(#goldG)">GYM</text>
+      <rect x="20" y="212" width="360" height="82" fill="#0a0a0a"/>
+      <rect x="20" y="206" width="360" height="5" fill="url(#goldG)"/>
+      <rect x="20" y="295" width="360" height="5" fill="url(#goldG)"/>
+      <text x="200" y="276" text-anchor="middle" font-family="Alfa Slab One,serif" font-size="72" fill="url(#goldG)" letter-spacing="2">SMASH</text>
+    </svg>
+  </div>
+</template>
+
+<div class="wrap">
+
+  <!-- ============ PAGE 1: WELCOME ============ -->
+  <section class="page active" id="p1">
+    <div id="logo1"></div>
+    <h1>أهلاً بيك في SMASH GYM</h1>
+    <p class="sub">سجّل بياناتك وادخل عجلة الحظ<br>وجرّب تكسب خصم أو هدية على اشتراكك 🏆</p>
+
+    <div class="warn">
+      <span style="font-size:22px">⚠️</span>
+      <span>تنبيه: هذا اللينك <b>يُستخدم مرة واحدة فقط</b>.</span>
+    </div>
+
+    <form class="card" id="form" autocomplete="off" novalidate>
+      <div class="err" id="err"></div>
+
+      <div class="field">
+        <label for="fname">الاسم ثلاثي</label>
+        <input id="fname" type="text" placeholder="مثال: أحمد محمد علي" maxlength="60">
+      </div>
+      <div class="field">
+        <label for="age">السن</label>
+        <input id="age" type="number" inputmode="numeric" placeholder="مثال: 24" min="5" max="90">
+      </div>
+      <div class="field">
+        <label for="member">هل أنت مشترك بالفعل؟</label>
+        <select id="member">
+          <option value="" selected disabled>اختار...</option>
+          <option value="مشترك">مشترك بالفعل</option>
+          <option value="غير مشترك">غير مشترك</option>
+        </select>
+      </div>
+      <button class="btn" id="nextBtn" type="submit">التالي ◀</button>
+    </form>
+    <p class="foot">SMASH GYM © جميع الحقوق محفوظة</p>
+  </section>
+
+  <!-- ============ PAGE 2: WHEEL ============ -->
+  <section class="page" id="p2">
+    <div id="logo2"></div>
+    <div class="who">
+      <div class="hi">أهلاً بيك يا بطل</div>
+      <div class="nm" id="whoName"></div>
+    </div>
+
+    <div class="wheel-box">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="760" height="760"></canvas>
+      <div class="hub">SMASH</div>
+    </div>
+
+    <button class="btn" id="spinBtn">🎡 لِفّ العجلة</button>
+
+    <div class="result" id="result">
+      <div class="trophy">🏆</div>
+      <h2 id="resTitle">مبروك!</h2>
+      <div class="prize" id="resPrize"></div>
+      <div class="meta" id="resMeta"></div>
+      <div class="shot">
+        ⏳ <b>متاح تفعيل الهدايا لحد يوم 31 أكتوبر</b>
+      </div>
+      <a class="wa" id="waBtn" href="#" target="_blank" rel="noopener">💬 اضغط هنا عشان تستفيد بالخصم</a>
+    </div>
+    <p class="foot">SMASH GYM © جميع الحقوق محفوظة</p>
+  </section>
+
+  <!-- ============ PAGE 3: MASTER DASHBOARD ============ -->
+  <section class="page" id="p3">
+    <div id="logo3"></div>
+    <h1>لوحة التحكم</h1>
+    <p class="sub">أهلاً SARAAN 👑</p>
+
+    <div class="warn" id="localWarn" style="display:none">
+      <span style="font-size:22px">ℹ️</span>
+      <span>الأرقام دي لهذا الجهاز بس. اربط قاعدة بيانات Firebase (في أول السكريبت) عشان تشوف كل الناس من كل الأجهزة.</span>
+    </div>
+    <div class="err" id="statErr"></div>
+
+    <div class="stats">
+      <div class="stat big"><div class="n" id="stSpun">0</div><div class="l">عدد اللي لفّوا العجلة</div></div>
+      <div class="stat"><div class="n" id="stMem">0</div><div class="l">مشتركين بالفعل</div></div>
+      <div class="stat"><div class="n" id="stNon">0</div><div class="l">مش مشتركين</div></div>
+    </div>
+    <div class="pending" id="stPending"></div>
+
+    <div style="overflow-x:auto">
+      <table class="sheet" id="sheet" style="display:none">
+        <thead><tr><th>#</th><th>الاسم</th><th>السن</th><th>الحالة</th><th>الهدية</th></tr></thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+
+    <button class="btn" id="refreshBtn">🔄 تحديث الأرقام</button>
+    <button class="btn ghost" id="exitBtn">خروج</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  /* =====================  الإعدادات  ===================== */
+  // لينك قاعدة بيانات Firebase Realtime Database
+  const FIREBASE_URL = 'https://smashgymapplication-6f9125b2-default-rtdb.firebaseio.com';
+
+  const MASTER_NAME = 'saraan';          // اسم الأكونت الماستر (مش حساس لحالة الحروف)
+  const WA_NUMBER_INTL = '201070004438'; // 01070004438
+  const KEY_SESSION = 'smash_session_v2';
+  const KEY_LOCAL_DB = 'smash_players_v2';
+
+  /* ---------- كل العروض (بتظهر لكل الناس على العجلة) ----------
+     g = الفئة اللي ممكن تكسب العرض ده:
+       senior = فوق 25 | mid = من 21 لـ 25 | young = تحت 21
+     luck / jackpot = بيظهروا بس ومحدش بيكسبهم عشوائي (إلا الأسماء الخاصة تحت) */
+  const SLICES = [
+    {t:'خصم 900 ج', s:'اشتراك السنة',        full:'خصم 900 جنيه على اشتراك السنة',                         g:'senior'},
+    {t:'خصم 30%',   s:'اشتراك الشهر',        full:'خصم 30% على اشتراك الشهر',                              g:'mid'},
+    {t:'خصم 20%',   s:'طلبة (انتوا اتنين)',  full:'خصم 20% على اشتراك الطلبة لو انتوا اتنين مع بعض',       g:'young'},
+    {t:'جلسة سبا',  s:'بخار - هدية',         full:'جلسة سبا (بخار) هدية',                                  g:'senior'},
+    {t:'خصم 350 ج', s:'اشتراك الشهرين',      full:'خصم 350 جنيه على اشتراك الشهرين',                       g:'mid'},
+    {t:'كيك بوكس',  s:'سيشن فري',            full:'سيشن كيك بوكس فري',                                     g:'young'},
+    {t:'خصم 500 ج', s:'اشتراك 6 شهور',       full:'خصم 500 جنيه على اشتراك الـ 6 شهور',                    g:'senior'},
+    {t:'خصم 35%',   s:'الشهر (انتوا اتنين)', full:'خصم 35% على اشتراك الشهر لو انتوا اتنين أصحاب مع بعض',  g:'mid'},
+    {t:'حظ أوفر',   s:'المرة القادمة',       luck:true},
+    {t:'خصم 300 ج', s:'اشتراك 3 شهور',       full:'خصم 300 جنيه على اشتراك الـ 3 شهور',                    g:'senior'},
+    {t:'خصم 100%',  s:'اشتراك الشهر',        full:'خصم 100% على اشتراك الشهر', jackpot:true}   // عشوائي: محدش بيكسبه، بس الأسماء الخاصة
+  ];
+  const groupOf = age => age > 25 ? 'senior' : (age >= 21 ? 'mid' : 'young');
+
+  /* ---------- الأسماء الخاصة (بتكسب جايزة محددة أول ما تكتب الاسم) ---------- */
+  const IDX_JACKPOT = SLICES.findIndex(o => o.jackpot);                 // خصم 100% اشتراك الشهر
+  const IDX_YEAR900 = SLICES.findIndex(o => o.t === 'خصم 900 ج');       // خصم 900 ج اشتراك السنة
+  const VIP_RAW = [
+    ['محمد احمد عبدالمرضي',   IDX_JACKPOT],
+    ['محمد ابراهيم جادالله',  IDX_JACKPOT],
+    ['ياسر ابراهيم كساب',     IDX_JACKPOT],
+    ['ابراهيم محوس عامر',     IDX_YEAR900],
+    ['عادل شعبان عجرمه',      IDX_YEAR900],
+    ['محمد شريف عيد',         IDX_YEAR900]
+  ];
+
+  /* ---------- أدوات ---------- */
+  const $ = id => document.getElementById(id);
+  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch(e){ return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  function normName(s){
+    return s.trim().toLowerCase()
+      .replace(/[\u064B-\u065F\u0670\u0640]/g,'')
+      .replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي')
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/\s+/g,' ');
+  }
+  const VIP = {};
+  VIP_RAW.forEach(([n, idx]) => { VIP[normName(n)] = idx; });
+
+  function randInt(n){
+    if (window.crypto && crypto.getRandomValues){
+      const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n;
+    }
+    return Math.floor(Math.random()*n);
+  }
+
+  /* ---------- قاعدة البيانات (Firebase أو الجهاز) ---------- */
+  const useCloud = !!FIREBASE_URL.trim();
+  const base = FIREBASE_URL.trim().replace(/\/+$/,'');
+  const dbKey = k => k.replace(/[.$#\[\]\/]/g,'').replace(/\s+/g,'_');
+  const pUrl = key => `${base}/players/${encodeURIComponent(dbKey(key))}.json`;
+
+  async function dbGet(key){
+    if (!useCloud) return load(KEY_LOCAL_DB, {})[dbKey(key)] || null;
+    const r = await fetch(pUrl(key), {cache:'no-store'});
+    if (!r.ok) throw new Error('net');
+    return await r.json();
+  }
+  async function dbSet(key, obj){
+    if (!useCloud){ const all = load(KEY_LOCAL_DB, {}); all[dbKey(key)] = obj; save(KEY_LOCAL_DB, all); return; }
+    const r = await fetch(pUrl(key), {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(obj)});
+    if (!r.ok) throw new Error('net');
+  }
+  async function dbAll(){
+    if (!useCloud) return load(KEY_LOCAL_DB, {});
+    const r = await fetch(`${base}/players.json`, {cache:'no-store'});
+    if (!r.ok) throw new Error('net');
+    return (await r.json()) || {};
+  }
+
+  /* ---------- اللوجوهات ---------- */
+  ['logo1','logo2','logo3'].forEach((id,i)=>{
+    $(id).appendChild($('logoTpl').content.cloneNode(true));
+    if (i > 0) $(id).firstElementChild.classList.add('small');
+  });
+
+  function showPage(n){
+    [1,2,3].forEach(i => $('p'+i).classList.toggle('active', i===n));
+    window.scrollTo({top:0});
+  }
+  function showErr(msg){ const e=$('err'); e.textContent=msg; e.classList.add('show'); }
+  function clearErr(){ $('err').classList.remove('show'); }
+
+  /* ---------- الصفحة الأولى ---------- */
+  $('form').addEventListener('submit', async ev => {
+    ev.preventDefault(); clearErr();
+    const name = $('fname').value.replace(/\s+/g,' ').trim();
+
+    // الأكونت الماستر
+    if (normName(name) === MASTER_NAME){
+      $('form').reset();
+      return openMaster();
+    }
+
+    const age = parseInt($('age').value, 10);
+    const member = $('member').value;
+
+    if (name.split(' ').filter(Boolean).length < 3) return showErr('من فضلك اكتب اسمك ثلاثي (٣ أسماء على الأقل).');
+    if (!/^[\u0600-\u06FFa-zA-Z\s]+$/.test(name)) return showErr('الاسم لازم يكون حروف فقط من غير أرقام أو رموز.');
+    if (!age || age < 5 || age > 90) return showErr('من فضلك اكتب سن صحيح.');
+    if (!member) return showErr('اختار هل أنت مشترك بالفعل ولا لأ.');
+
+    const key = normName(name);
+    const btn = $('nextBtn');
+    btn.disabled = true; btn.textContent = 'جاري التحقق...';
+    try{
+      const existing = await dbGet(key);
+      if (existing){
+        showErr('نفذت المحاولات');
+        return;
+      }
+      await dbSet(key, {name, age, member, spun:false, prize:null, date:null, ts:Date.now()});
+      const session = {name, age, member, key, sliceIndex:null, prizeFull:null, date:null};
+      save(KEY_SESSION, session);
+      openWheel(session);
+    }catch(e){
+      showErr('في مشكلة في الاتصال بالإنترنت، جرّب تاني.');
+    }finally{
+      btn.disabled = false; btn.textContent = 'التالي ◀';
+    }
+  });
+
+  /* ---------- الصفحة التانية: العجلة ---------- */
+  const canvas = $('wheel'), ctx = canvas.getContext('2d');
+  const sliceDeg = 360 / SLICES.length;
+  let spinning = false, session = null;
+
+  function fitText(text, weight, size, maxW){
+    ctx.font = `${weight} ${size}px Cairo, sans-serif`;
+    while (ctx.measureText(text).width > maxW && size > 12){ size -= 1; ctx.font = `${weight} ${size}px Cairo, sans-serif`; }
+    return size;
+  }
+
+  function drawWheel(){
+    const W = canvas.width, C = W/2, R = C - 26;
+    ctx.clearRect(0,0,W,W);
+
+    const rim = ctx.createLinearGradient(0,0,W,W);
+    rim.addColorStop(0,'#F7DE82'); rim.addColorStop(.5,'#D4AF37'); rim.addColorStop(1,'#9C7A1A');
+    ctx.beginPath(); ctx.arc(C,C,C-4,0,Math.PI*2); ctx.fillStyle = rim; ctx.fill();
+    ctx.beginPath(); ctx.arc(C,C,R+8,0,Math.PI*2); ctx.fillStyle = '#0a0a0a'; ctx.fill();
+
+    const sa = Math.PI*2/SLICES.length;
+    SLICES.forEach((o,i)=>{
+      const a0 = -Math.PI/2 + i*sa, a1 = a0 + sa;
+      ctx.beginPath(); ctx.moveTo(C,C); ctx.arc(C,C,R,a0,a1); ctx.closePath();
+
+      let fill, tColor, sColor;
+      if (o.jackpot){                                // خصم 100%: أحمر مميز
+        fill = ctx.createRadialGradient(C,C,R*.1,C,C,R);
+        fill.addColorStop(0,'#5a0f0f'); fill.addColorStop(1,'#b3262b');
+        tColor = '#FFE27A'; sColor = '#ffd7d7';
+      } else if (o.luck){                            // حظ أوفر: فضي
+        fill = ctx.createRadialGradient(C,C,R*.1,C,C,R);
+        fill.addColorStop(0,'#7a7a7a'); fill.addColorStop(1,'#d6d6d6');
+        tColor = '#1c1c1c'; sColor = '#333';
+      } else if (i % 2 === 0){                       // دهبي
+        fill = ctx.createRadialGradient(C,C,R*.15,C,C,R);
+        fill.addColorStop(0,'#9C7A1A'); fill.addColorStop(.6,'#D4AF37'); fill.addColorStop(1,'#F7DE82');
+        tColor = '#150f00'; sColor = '#2a1d00';
+      } else {                                       // أسود
+        fill = ctx.createRadialGradient(C,C,R*.1,C,C,R);
+        fill.addColorStop(0,'#000'); fill.addColorStop(1,'#1d1d1d');
+        tColor = '#F7DE82'; sColor = '#d9c88a';
+      }
+      ctx.fillStyle = fill; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = '#0a0a0a'; ctx.stroke();
+
+      ctx.save();
+      ctx.translate(C,C); ctx.rotate(a0 + sa/2);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      const maxW = R*0.6, x = R - 24;
+      ctx.fillStyle = tColor; fitText(o.t, 900, 36, maxW); ctx.fillText(o.t, x, -13);
+      ctx.fillStyle = sColor; fitText(o.s, 700, 21, maxW); ctx.fillText(o.s, x, 20);
+      ctx.restore();
+    });
+
+    const n = 24;
+    for (let i=0;i<n;i++){
+      const a = i*(Math.PI*2/n);
+      ctx.beginPath(); ctx.arc(C+Math.cos(a)*(C-16), C+Math.sin(a)*(C-16), 5, 0, Math.PI*2);
+      ctx.fillStyle = i%2 ? '#fff6cf' : '#0a0a0a'; ctx.fill();
+    }
+  }
+
+  function setRotation(deg, animate){
+    canvas.style.transition = animate ? '' : 'none';
+    canvas.style.transform = `rotate(${deg}deg)`;
+    if (!animate){ void canvas.offsetWidth; canvas.style.transition = ''; }
+  }
+
+  function showResult(s){
+    $('resTitle').textContent = `مبروك يا ${s.name.split(' ')[0]}! 🎉`;
+    $('resPrize').textContent = s.prizeFull;
+    $('resMeta').innerHTML = `الاسم: <b>${s.name}</b> — ${s.member}<br>التاريخ: ${s.date}`;
+    const msg = `أنا ${s.name} (${s.member}) كسبت من عجلة الحظ في SMASH GYM: ${s.prizeFull}`;
+    const url = `https://wa.me/${WA_NUMBER_INTL}?text=${encodeURIComponent(msg)}`;
+    $('waBtn').href = url;
+    $('result').classList.add('show');
+    $('spinBtn').style.display = 'none';
+    setTimeout(()=> $('result').scrollIntoView({behavior:'smooth', block:'center'}), 250);
+  }
+
+  function confetti(){
+    const colors = ['#F7DE82','#D4AF37','#ffffff','#9C7A1A'];
+    for (let i=0;i<70;i++){
+      const d = document.createElement('div'); d.className = 'confetti';
+      d.style.left = Math.random()*100 + 'vw';
+      d.style.background = colors[i % colors.length];
+      d.style.animationDuration = (2 + Math.random()*2.5) + 's';
+      d.style.animationDelay = (Math.random()*.6) + 's';
+      d.style.transform = `rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(), 5500);
+    }
+  }
+
+  function openWheel(s){
+    session = s;
+    $('whoName').textContent = s.name;
+    showPage(2);
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{
+      drawWheel();
+      if (s.prizeFull){            // رجع بعد ريفريش وكان لفّ
+        setRotation(360*5 - (s.sliceIndex + .5)*sliceDeg, false);
+        showResult(s);
+      }
+    });
+  }
+
+  async function persistSpin(s){
+    for (let i=0; i<4; i++){
+      try{
+        await dbSet(s.key, {name:s.name, age:s.age, member:s.member, spun:true, prize:s.prizeFull, date:s.date, ts:Date.now()});
+        return;
+      }catch(e){ await wait(1500); }
+    }
+  }
+
+  $('spinBtn').addEventListener('click', () => {
+    if (spinning || session.prizeFull) return;
+    spinning = true; $('spinBtn').disabled = true;
+
+    // الأسماء الخاصة بتكسب جايزة محددة، وباقي الناس حسب فئة السن
+    // ("حظ أوفر" و"خصم 100%" عمرهم ما بيتختاروا عشوائي)
+    let idx;
+    const vipIdx = VIP[normName(session.name)];
+    if (vipIdx !== undefined && vipIdx >= 0){
+      idx = vipIdx;
+    } else {
+      const group = groupOf(session.age);
+      const eligible = SLICES.map((o,i)=>({o,i})).filter(x => !x.o.luck && !x.o.jackpot && x.o.g === group);
+      idx = eligible[randInt(eligible.length)].i;
+    }
+
+    const jitter = (Math.random() - .5) * sliceDeg * .6;
+    const target = 360*7 - (idx + .5)*sliceDeg + jitter;
+
+    session.sliceIndex = idx;
+    session.prizeFull = SLICES[idx].full;
+    session.date = new Date().toLocaleString('ar-EG', {dateStyle:'full', timeStyle:'short'});
+    save(KEY_SESSION, session);       // نحفظ قبل اللف عشان الريفريش ما يديش فرصة تانية
+    persistSpin(session);
+
+    setRotation(target, true);
+    setTimeout(()=>{ spinning = false; showResult(session); confetti(); }, 5700);
+  });
+
+  /* ---------- الصفحة التالتة: الماستر ---------- */
+  async function loadStats(){
+    $('localWarn').style.display = useCloud ? 'none' : 'flex';
+    $('statErr').classList.remove('show');
+    ['stSpun','stMem','stNon'].forEach(id => $(id).textContent = '…');
+    $('stPending').textContent = '';
+    $('sheet').style.display = 'none';
+    try{
+      const list = Object.values(await dbAll()).filter(Boolean);
+      const spun = list.filter(p => p.spun);
+      $('stSpun').textContent = spun.length;
+      $('stMem').textContent  = spun.filter(p => p.member === 'مشترك').length;
+      $('stNon').textContent  = spun.filter(p => p.member !== 'مشترك').length;
+      const pending = list.length - spun.length;
+      if (pending > 0) $('stPending').textContent = `سجّلوا ولسه ما لفّوش: ${pending}`;
+
+      // الشيت: كل اللي لفّوا (الأحدث فوق)
+      const body = $('sheetBody'); body.innerHTML = '';
+      spun.sort((a,b) => (b.ts||0) - (a.ts||0)).forEach((p,i) => {
+        const tr = document.createElement('tr');
+        const add = (txt, cls) => { const td = document.createElement('td'); td.textContent = txt; if (cls) td.className = cls; tr.appendChild(td); return td; };
+        add(i+1); add(p.name, 'nm'); add(p.age);
+        const st = add('');
+        const tag = document.createElement('span');
+        tag.className = 'tag ' + (p.member === 'مشترك' ? 'm' : 'n');
+        tag.textContent = p.member === 'مشترك' ? 'مشترك' : 'غير مشترك';
+        st.appendChild(tag);
+        add(p.prize || '—');
+        body.appendChild(tr);
+      });
+      $('sheet').style.display = spun.length ? 'table' : 'none';
+    }catch(e){
+      ['stSpun','stMem','stNon'].forEach(id => $(id).textContent = '–');
+      const er = $('statErr'); er.textContent = 'مقدرتش أجيب الأرقام، اتأكد من الإنترنت وجرّب تاني.'; er.classList.add('show');
+    }
+  }
+  function openMaster(){ showPage(3); loadStats(); }
+  $('refreshBtn').addEventListener('click', loadStats);
+  $('exitBtn').addEventListener('click', () => { showPage(1); });
+
+  /* ---------- بداية التشغيل ---------- */
+  // لو فتحت اللينك بـ #admin في الآخر هيتجاهل أي جلسة محفوظة على الجهاز (مفيد للماستر)
+  const existing = load(KEY_SESSION, null);
+  if (existing && existing.name && location.hash !== '#admin') openWheel(existing);
+})();
+</script>
+</body>
+</html>
