@@ -369,14 +369,17 @@
     const btn = $('nextBtn');
     btn.disabled = true; btn.textContent = 'جاري التحقق...';
     try{
-      const existing = await dbGet(key);
-      if (existing){
-        showErr('نفذت المحاولات');
-        return;
+      const isVip = VIP[key] !== undefined && VIP[key] >= 0;
+      if (!isVip){
+        const existing = await dbGet(key);
+        if (existing){
+          showErr('نفذت المحاولات');
+          return;
+        }
+        await dbSet(key, {name, age, member, spun:false, prize:null, date:null, ts:Date.now()});
       }
-      await dbSet(key, {name, age, member, spun:false, prize:null, date:null, ts:Date.now()});
       const session = {name, age, member, key, sliceIndex:null, prizeFull:null, date:null};
-      save(KEY_SESSION, session);
+      if (!isVip) save(KEY_SESSION, session);   // الأسماء الخاصة مش بتتحفظ جلستها، فتقدر تدخل وتلف كل مرة
       openWheel(session);
     }catch(e){
       showErr('في مشكلة في الاتصال بالإنترنت، جرّب تاني.');
@@ -524,7 +527,7 @@
     session.sliceIndex = idx;
     session.prizeFull = SLICES[idx].full;
     session.date = new Date().toLocaleString('ar-EG', {dateStyle:'full', timeStyle:'short'});
-    save(KEY_SESSION, session);       // نحفظ قبل اللف عشان الريفريش ما يديش فرصة تانية
+    if (!(vipIdx !== undefined && vipIdx >= 0)) save(KEY_SESSION, session);   // نحفظ قبل اللف عشان الريفريش ما يديش فرصة تانية (إلا الأسماء الخاصة)
     persistSpin(session);
 
     setRotation(target, true);
@@ -574,7 +577,8 @@
   /* ---------- بداية التشغيل ---------- */
   // لو فتحت اللينك بـ #admin في الآخر هيتجاهل أي جلسة محفوظة على الجهاز (مفيد للماستر)
   const existing = load(KEY_SESSION, null);
-  if (existing && existing.name && location.hash !== '#admin') openWheel(existing);
+  const existingIsVip = existing && existing.name && VIP[normName(existing.name)] !== undefined;
+  if (existing && existing.name && !existingIsVip && location.hash !== '#admin') openWheel(existing);
 })();
 </script>
 </body>
